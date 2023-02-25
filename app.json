@@ -1,32 +1,38 @@
 {
   "expo": {
-    "name": "mm-downloader",
+    "name": "ViBE",
     "slug": "mm-downloader",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/mm.png",
     "splash": {
       "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#e09794"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/mm.png",
         "backgroundColor": "#FFFFFF"
-      }
+      },
+      "permissions": ["READ_EXTERNAL_STORAGE", "WRITE_EXTERNAL_STORAGE"],
+      "package": "com.sandeepnegi.mmdownloader"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
-    }
+      "favicon": "./assets/mm.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "f45e302d-94e3-430b-9712-b6372a1ded16"
+      }
+    },
+    "owner": "sandeepnegi"
   }
 }
