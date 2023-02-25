@@ -22,10 +22,11 @@ import {
 
 import ytdl from "react-native-ytdl";
 import * as FileSystem from "expo-file-system";
-
-import NativeBaseIcon from "./components/NativeBaseIcon";
 import { Platform } from "react-native";
-import icon from "./assets/mm.png";
+import icon from "./assets/getyourtrack-fav.png";
+// import { AdMobBanner } from "react-native-google-mobile-ads";
+
+import * as MediaLibrary from "expo-media-library";
 
 // Define the config
 const config = {
@@ -40,28 +41,28 @@ export default function App() {
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [isDownloading, setIsDownloading] = useState(false);
   const [url, setUrl] = useState("");
+  const [permission, askForPermission] = MediaLibrary.usePermissions();
 
   const handleChangeUrl = (text) => setUrl(text);
 
   const downloadBtnHandler = async (e) => {
     if (url) {
       try {
+        if (!permission.granted) {
+          const { status } = await askForPermission();
+          if (status !== "granted") {
+            console.log("Permission not granted!");
+            return;
+          }
+        }
         const videoInfo = await ytdl.getInfo(url);
-        const videoTitle = videoInfo.videoDetails.title + "[ViBE]";
+        const videoTitle = videoInfo.videoDetails.title + "[trackdown].mp3";
         const format = ytdl.chooseFormat(videoInfo.formats, {
           quality: "highestaudio",
         });
 
-        const permissions =
-          await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
-        if (!permissions.granted) {
-          return;
-        }
-        console.log(permissions.directoryUri);
-
-        // const downloadDir = FileSystem.documentDirectory + "ViBE/";
-        const downloadDir = `${permissions.directoryUri}/`;
-        const fileUri = downloadDir + videoTitle + ".mp3";
+        const downloadDir = FileSystem.documentDirectory + "trackdown/";
+        const fileUri = downloadDir + videoTitle;
 
         const directoryInfo = await FileSystem.getInfoAsync(downloadDir);
         if (!directoryInfo.exists) {
@@ -69,9 +70,6 @@ export default function App() {
             intermediates: true,
           });
         }
-        // Use the provided URI to get the DocumentFile
-        const documentFile =
-          await FileSystem.StorageAccessFramework.getDocumentAsync(downloadDir);
         setIsDownloading(true);
         const file = await FileSystem.createDownloadResumable(
           format.url,
@@ -90,14 +88,25 @@ export default function App() {
 
         const downloadResult = await file.downloadAsync();
 
-        await FileSystem.writeAsStringAsync(fileUri, content);
+        try {
+          const asset = await MediaLibrary.createAssetAsync(downloadResult.uri);
+          const albumName = "trackdown";
+          const album = await MediaLibrary.getAlbumAsync(albumName);
+          if (album === null) {
+            await MediaLibrary.createAlbumAsync(albumName, asset, false);
+          } else {
+            await MediaLibrary.addAssetsToAlbumAsync([asset], album, false);
+          }
+        } catch (error) {
+          console.log(error);
+        }
         setIsDownloading(false);
         ToastAndroid.showWithGravity(
-          `"${downloadResult.uri}" has been downloaded.`,
+          `"${videoTitle}" has been downloaded.`,
           ToastAndroid.LONG,
           ToastAndroid.BOTTOM
         );
-        console.log(`Audio saved to ${downloadResult.uri}`);
+        console.log(`Audio saved to ${videoTitle}`);
       } catch (error) {
         ToastAndroid.showWithGravity(
           "" + error,
@@ -106,6 +115,7 @@ export default function App() {
         );
         console.error(error);
       } finally {
+        setUrl("");
         setDownloadProgress(0);
         setIsDownloading(false);
       }
@@ -179,6 +189,12 @@ export default function App() {
             mb={2}
           ></VStack>
         </VStack>
+
+        {/* <AdMobBanner
+          adSize="banner"
+          adUnitID="ca-app-pub-7734815935340334/3576454759" // Test ID, Replace with your-admob-unit-id
+          onAdFailedToLoad={(error) => console.error(error)}
+        /> */}
       </Center>
     </NativeBaseProvider>
   );
